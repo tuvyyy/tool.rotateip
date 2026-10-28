@@ -1,0 +1,22 @@
+{
+  "dotnet.defaultSolution": "NetworkProfileManager.sln",
+  "omnisharp.dotnetPath": "c:\\toolrotateip\\.tools\\dotnet",
+  "omnisharp.sdkPath": "c:\\toolrotateip\\.tools\\dotnet\\sdk\\10.0.402",
+  "dotnetAcquisitionExtension.allowInvalidPaths": true,
+  "dotnetAcquisitionExtension.cacheTimeToLiveMultiplier": 0,
+  "dotnetAcquisitionExtension.sharedExistingDotnetPath": "c:\\toolrotateip\\.tools\\dotnet\\dotnet.exe",
+  "dotnetAcquisitionExtension.existingDotnetPath": [
+    {
+      "extensionId": "ms-dotnettools.csharp",
+      "path": "c:\\toolrotateip\\.tools\\dotnet\\dotnet.exe"
+    },
+    {
+      "extensionId": "ms-dotnettools.csdevkit",
+      "path": "c:\\toolrotateip\\.tools\\dotnet\\dotnet.exe"
+    }
+  ],
+  "terminal.integrated.env.windows": {
+    "DOTNET_ROOT": "c:\\toolrotateip\\.tools\\dotnet",
+    "PATH": "c:\\toolrotateip\\.tools\\dotnet;${env:PATH}"
+  }
+}

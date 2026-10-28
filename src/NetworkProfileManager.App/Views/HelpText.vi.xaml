@@ -1,0 +1,20 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <sys:String x:Key="HelpGateway">Hai profile dùng chung tài khoản proxy, nhưng có thư mục dữ liệu, tiến trình và kết nối cục bộ riêng. Hai IP có thể trùng nhau; Standard Rotation không bảo đảm IP cố định hoặc khác nhau.</sys:String>
+    <sys:String x:Key="HelpProxyIp">IP gần nhất là kết quả request của ứng dụng qua proxy service. Đây chưa phải xác minh tự động IP của trình duyệt. Đối chiếu trang IP echo mở trong từng trình duyệt; IP có thể đổi theo kết nối.</sys:String>
+    <sys:String x:Key="HelpExecutable">Để trống để tự phát hiện trình duyệt. Nếu không tìm thấy, chọn đúng file .exe. App chỉ dùng profile riêng và không sửa profile cá nhân.</sys:String>
+    <sys:String x:Key="HelpProfile">Tên chỉ dùng để nhận diện thẻ. Dữ liệu của A và B được lưu riêng, kể cả khi chọn cùng một loại trình duyệt.</sys:String>
+    <sys:String x:Key="HelpRotation">Standard Rotation phụ thuộc quy tắc của nhà cung cấp. Sticky Session chưa được cấu hình; cần thông số hoặc API chính thức của nhà cung cấp để tích hợp.</sys:String>
+    <sys:String x:Key="HelpProxyConfiguration">Lưu một cấu hình cho cả hai profile. Dừng cả hai trình duyệt trước khi đổi gateway. Username và password được mã hóa bằng DPAPI theo tài khoản Windows hiện tại.</sys:String>
+    <sys:String x:Key="HelpExpiry">Ngày hết hạn là thông tin bạn nhập. App chặn lần khởi chạy hoặc kiểm tra mới sau ngày này; không tự hỏi nhà cung cấp về thời hạn tài khoản.</sys:String>
+    <sys:String x:Key="HelpIpChecks">Mỗi lần kiểm tra là một request riêng. Kết quả trùng IP không phải lỗi. Kiểm tra ba lần giúp quan sát thay đổi tại thời điểm kiểm tra, không bảo đảm quy tắc xoay IP.</sys:String>
+    <sys:String x:Key="HelpNetwork">Ưu tiên adapter Wi-Fi đang hoạt động. Public IP trực tiếp chỉ cập nhật khi bạn chọn kiểm tra. DHCP Renew không đồng nghĩa đổi public IP.</sys:String>
+    <sys:String x:Key="HelpRandomAddress">Mở trang cài đặt Wi-Fi của Windows. Tùy chọn địa chỉ phần cứng ngẫu nhiên chỉ hiện khi Windows và driver hỗ trợ. App không sửa MAC bằng registry hoặc driver.</sys:String>
+    <sys:String x:Key="HelpEcho">Endpoint phải dùng HTTPS và trả về một IP dạng văn bản hoặc JSON có trường ip. Request đi qua tuyến bạn chọn; không gửi dữ liệu tới server nhà phát triển.</sys:String>
+    <sys:String x:Key="HelpTimeout">Thời gian chờ cho mỗi lần kiểm tra, từ 3 đến 120 giây. Có thể hủy tác vụ đang chờ bằng nút Hủy tác vụ.</sys:String>
+    <sys:String x:Key="HelpStorage">Profile, lịch sử và cấu hình nằm trong %LOCALAPPDATA%\NetworkProfileManager. Credentials được bảo vệ bằng DPAPI. Gỡ cài đặt sẽ giữ dữ liệu này.</sys:String>
+    <sys:String x:Key="HelpStop">Chỉ đóng các tiến trình và kết nối do ứng dụng tạo. Những cửa sổ trình duyệt khác của bạn không bị đóng.</sys:String>
+    <sys:String x:Key="HelpAdvancedNetwork">Các thao tác hệ thống sẽ gọi công cụ ipconfig của Windows sau khi bạn xác nhận. Một số thao tác có thể yêu cầu quyền Quản trị viên (Administrator).</sys:String>
+    <sys:String x:Key="HelpLogs">Nhật ký được lưu cục bộ trong SQLite (tối đa 2.000 mục). Thông tin xác thực proxy luôn được che tự động trước khi ghi.</sys:String>
+</ResourceDictionary>

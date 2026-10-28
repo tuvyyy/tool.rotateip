@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Network Profile Manager (WPF)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/NetworkProfileManager.App/bin/Debug/net10.0-windows/NetworkProfileManager.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/NetworkProfileManager.App",
+      "stopAtEntry": false
+    }
+  ]
+}
+

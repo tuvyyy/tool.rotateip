@@ -1,0 +1,1779 @@
+<Window x:Class="NetworkProfileManager.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:NetworkProfileManager.App.Views"
+        Title="Accre Rotate IP"
+        Icon="pack://application:,,,/NetworkProfileManager;component/Assets/logo.png"
+        Width="1280"
+        Height="780"
+        MinWidth="960"
+        MinHeight="640"
+        WindowStartupLocation="CenterScreen"
+        Style="{StaticResource {x:Type Window}}">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolVisibility"/>
+
+        <!-- Sidebar Navigation TabItem Style -->
+        <Style TargetType="TabItem">
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+            <Setter Property="FontSize" Value="13.5"/>
+            <Setter Property="Margin" Value="10,2"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="Tile"
+                                CornerRadius="7"
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                BorderThickness="1">
+                            <Grid>
+                                <Border x:Name="SelectionLine"
+                                        Width="3"
+                                        Height="18"
+                                        CornerRadius="1.5"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        Margin="2,0,0,0"
+                                        Background="Transparent"/>
+                                <ContentPresenter ContentSource="Header" Margin="14,10"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Tile" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Tile" Property="Background" Value="{DynamicResource NavSelectedBrush}"/>
+                                <Setter TargetName="SelectionLine" Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Tile" Property="BorderBrush" Value="{DynamicResource AccentTextBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- DataGrid Styles -->
+        <Style TargetType="DataGrid">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="RowBackground" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="AlternatingRowBackground" Value="{DynamicResource SubtleBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource SubtleBorderBrush}"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="AutoGenerateColumns" Value="False"/>
+            <Setter Property="CanUserAddRows" Value="False"/>
+            <Setter Property="RowHeight" Value="40"/>
+            <Setter Property="SelectionMode" Value="Single"/>
+            <Setter Property="SelectionUnit" Value="FullRow"/>
+        </Style>
+
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="{DynamicResource InputBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="FontSize" Value="12.5"/>
+        </Style>
+
+        <Style TargetType="DataGridRow">
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource NavSelectedBrush}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="DataGridCell">
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border Background="Transparent" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Dynamic Status Badge & Text Styles -->
+        <Style x:Key="ConnectionText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding StatusLabel}" Value="Proxy hoạt động">
+                    <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding HasProxyError}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="StatusBadgeBorder" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource BadgeNeutralBgBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="10,4"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource SuccessBgBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding StatusLabel}" Value="Proxy hoạt động">
+                    <Setter Property="Background" Value="{DynamicResource SuccessBgBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding HasProxyError}" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource ErrorBgBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- DASHBOARD SUMMARY CARD TEMPLATE (Page 0: Concise, no full EXE/Profile edit form) -->
+        <DataTemplate x:Key="DashboardSummaryCard">
+            <Border Style="{StaticResource Card}" Margin="0" Padding="20,18">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Card Header: Profile Title, Browser Badge & Status Pill -->
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Caption}" Style="{StaticResource SectionTitle}"/>
+                                <Border Background="{DynamicResource InputBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        Padding="8,2"
+                                        Margin="10,0,0,0"
+                                        VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding BrowserDisplayName}"
+                                               FontSize="12"
+                                               FontWeight="Medium"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                </Border>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                <TextBlock Text="Hồ sơ:" FontSize="12.5" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding Name}" FontSize="12.5" FontWeight="Medium" Margin="5,0,0,0" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+                                <Button Style="{StaticResource HelpButton}" ToolTip="{StaticResource HelpProfile}" AutomationProperties.Name="Thông tin tên profile"/>
+                                <Button Content="Tùy chỉnh…"
+                                        Style="{StaticResource SubtleButton}"
+                                        Margin="8,0,0,0"
+                                        Padding="8,2"
+                                        MinHeight="24"
+                                        FontSize="11.5"
+                                        Command="{Binding DataContext.OpenBrowserManagerCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+                            <Border Style="{StaticResource StatusBadgeBorder}">
+                                <TextBlock Text="{Binding StatusLabel}" Style="{StaticResource ConnectionText}"/>
+                            </Border>
+                            <Button Style="{StaticResource HelpButton}"
+                                    ToolTip="{Binding ConnectionStatus}"
+                                    AutomationProperties.Name="Chi tiết trạng thái proxy"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Primary IP & Connection Metrics Block -->
+                    <Border Grid.Row="1" Style="{StaticResource SubtleCard}" Margin="0,0,0,14" Padding="14,10">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="34"/>
+                                <RowDefinition Height="28"/>
+                                <RowDefinition Height="26"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Row 0: Primary Metric (Observed IP) -->
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="IP gần nhất" Style="{StaticResource FieldLabel}"/>
+                                <Button Style="{StaticResource HelpButton}" ToolTip="{StaticResource HelpProxyIp}" AutomationProperties.Name="Ý nghĩa IP gần nhất"/>
+                            </StackPanel>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding Ip}"
+                                       FontSize="19"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource AccentTextBrush}"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       TextWrapping="NoWrap"
+                                       TextTrimming="CharacterEllipsis"
+                                       ToolTip="{Binding Ip}"
+                                       Margin="12,0,8,0"/>
+                            <Button Grid.Column="2"
+                                    Content="Sao chép"
+                                    Style="{StaticResource SubtleButton}"
+                                    Margin="0"
+                                    Padding="9,4"
+                                    MinHeight="28"
+                                    Command="{Binding DataContext.CopyCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding Ip}"
+                                    IsEnabled="{Binding HasIp}"/>
+
+                            <!-- Row 1: Route & Connection Details -->
+                            <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="Tuyến kết nối" Style="{StaticResource FieldLabel}"/>
+                                <Button Style="{StaticResource HelpButton}"
+                                        ToolTip="{StaticResource HelpExecutable}"
+                                        AutomationProperties.Name="Thông tin thực thi trình duyệt"/>
+                            </StackPanel>
+                            <TextBlock Grid.Row="1"
+                                       Grid.Column="1"
+                                       Grid.ColumnSpan="2"
+                                       Text="{Binding ConnectionStatus}"
+                                       FontSize="12.5"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       TextWrapping="NoWrap"
+                                       TextTrimming="CharacterEllipsis"
+                                       ToolTip="{Binding ConnectionStatus}"
+                                       Margin="12,0,0,0"/>
+
+                            <!-- Row 2: Last Checked Timestamp -->
+                            <TextBlock Grid.Row="2" Text="Kiểm tra cuối" Style="{StaticResource FieldLabel}"/>
+                            <TextBlock Grid.Row="2"
+                                       Grid.Column="1"
+                                       Grid.ColumnSpan="2"
+                                       Text="{Binding LastCheck}"
+                                       FontSize="12"
+                                       FontWeight="Medium"
+                                       Foreground="{DynamicResource MutedBrush}"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       TextWrapping="NoWrap"
+                                       ToolTip="{Binding LastCheckDetails}"
+                                       Margin="12,0,0,0"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Action Bar: 3 Uniformly Sized Buttons (Never wraps or stretches disproportionately) -->
+                    <UniformGrid Grid.Row="3" Columns="3">
+                        <Button Content="Kiểm tra Proxy"
+                                Margin="0,0,6,0"
+                                Padding="10,8"
+                                Command="{Binding DataContext.TestProfileCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}"/>
+                        <Button Content="Khởi chạy"
+                                Style="{StaticResource PrimaryButton}"
+                                Margin="3,0,3,0"
+                                Padding="10,8"
+                                Command="{Binding DataContext.LaunchProfileCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}"
+                                IsEnabled="{Binding CanEdit}"/>
+                        <Button Content="Dừng"
+                                Margin="6,0,0,0"
+                                Padding="10,8"
+                                Command="{Binding DataContext.StopProfileCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}"/>
+                    </UniformGrid>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!-- DETAILED BROWSER CONFIGURATION CARD TEMPLATE (Page 2: Hai trình duyệt) -->
+        <DataTemplate x:Key="BrowserConfigCard">
+            <Border Style="{StaticResource Card}" Margin="0" Padding="20,18">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Card Header -->
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="{Binding Caption}" Style="{StaticResource SectionTitle}"/>
+                            <TextBlock Text="{Binding ProfileFolderHint}"
+                                       FontSize="11.5"
+                                       Foreground="{DynamicResource MutedBrush}"
+                                       Margin="0,3,0,0"
+                                       TextWrapping="NoWrap"
+                                       TextTrimming="CharacterEllipsis"
+                                       ToolTip="{Binding ProfileFolderHint}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+                            <Border Style="{StaticResource StatusBadgeBorder}">
+                                <TextBlock Text="{Binding StatusLabel}" Style="{StaticResource ConnectionText}"/>
+                            </Border>
+                            <Button Style="{StaticResource HelpButton}"
+                                    ToolTip="{Binding ConnectionStatus}"
+                                    AutomationProperties.Name="Chi tiết trạng thái proxy"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Editable Configuration Fields -->
+                    <StackPanel Grid.Row="1" IsEnabled="{Binding CanEdit}">
+                        <TextBlock Text="Loại trình duyệt" Style="{StaticResource FieldLabel}"/>
+                        <ComboBox ItemsSource="{Binding Browsers}"
+                                  DisplayMemberPath="Label"
+                                  SelectedValuePath="Kind"
+                                  SelectedValue="{Binding Browser}"
+                                  AutomationProperties.Name="Trình duyệt"/>
+
+                        <DockPanel>
+                            <TextBlock Text="Tên hồ sơ (Profile)" Style="{StaticResource FieldLabel}"/>
+                            <Button Style="{StaticResource HelpButton}"
+                                    ToolTip="{StaticResource HelpProfile}"
+                                    AutomationProperties.Name="Thông tin tên profile"
+                                    HorizontalAlignment="Left"/>
+                        </DockPanel>
+                        <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                                 MaxLength="80"
+                                 Tag="Nhập tên nhận diện hồ sơ"
+                                 AutomationProperties.Name="Tên profile"/>
+
+                        <DockPanel>
+                            <TextBlock Text="Đường dẫn tệp thực thi (.exe)" Style="{StaticResource FieldLabel}"/>
+                            <Button Style="{StaticResource HelpButton}"
+                                    ToolTip="{StaticResource HelpExecutable}"
+                                    AutomationProperties.Name="Thông tin đường dẫn exe"
+                                    HorizontalAlignment="Left"/>
+                        </DockPanel>
+                        <Grid Margin="0,4,0,14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Text="{Binding ExecutablePath, UpdateSourceTrigger=PropertyChanged}"
+                                     Tag="Tự phát hiện trình duyệt đã cài"
+                                     Margin="0,0,8,0"
+                                     FontSize="12.5"
+                                     ToolTip="{Binding ExecutableSummary}"
+                                     AutomationProperties.Name="Đường dẫn exe"/>
+                            <Button Grid.Column="1"
+                                    Content="Tự phát hiện"
+                                    Margin="0,0,6,0"
+                                    Padding="11,8"
+                                    Command="{Binding DataContext.AutoDetectBrowserCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding}"/>
+                            <Button Grid.Column="2"
+                                    Content="Chọn tệp…"
+                                    Margin="0"
+                                    Padding="12,8"
+                                    Command="{Binding DataContext.PickBrowserCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding}"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Status & Observed IP Summary Block -->
+                    <Border Grid.Row="2" Style="{StaticResource SubtleCard}" Padding="14,10" Margin="0,0,0,16">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="26"/>
+                                <RowDefinition Height="28"/>
+                                <RowDefinition Height="24"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Text="Trạng thái kết nối" Style="{StaticResource FieldLabel}"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding ConnectionStatus}"
+                                       FontSize="12.5"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       TextWrapping="NoWrap"
+                                       TextTrimming="CharacterEllipsis"
+                                       ToolTip="{Binding ConnectionStatus}"
+                                       Margin="12,0,0,0"/>
+
+                            <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="IP gần nhất" Style="{StaticResource FieldLabel}"/>
+                                <Button Style="{StaticResource HelpButton}"
+                                        ToolTip="{StaticResource HelpProxyIp}"
+                                        AutomationProperties.Name="Ý nghĩa IP gần nhất"/>
+                            </StackPanel>
+                            <TextBlock Grid.Row="1"
+                                       Grid.Column="1"
+                                       Text="{Binding Ip}"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource AccentTextBrush}"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       TextWrapping="NoWrap"
+                                       TextTrimming="CharacterEllipsis"
+                                       ToolTip="{Binding Ip}"
+                                       Margin="12,0,0,0"/>
+
+                            <TextBlock Grid.Row="2" Text="Lần kiểm tra cuối" Style="{StaticResource FieldLabel}"/>
+                            <TextBlock Grid.Row="2"
+                                       Grid.Column="1"
+                                       Text="{Binding LastCheck}"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource MutedBrush}"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       TextWrapping="NoWrap"
+                                       ToolTip="{Binding LastCheckDetails}"
+                                       Margin="12,0,0,0"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Uniformly Sized Action Buttons -->
+                    <UniformGrid Grid.Row="4" Columns="3">
+                        <Button Content="Kiểm tra Proxy"
+                                Margin="0,0,6,0"
+                                Padding="10,8"
+                                Command="{Binding DataContext.TestProfileCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}"/>
+                        <Button Content="Khởi chạy"
+                                Style="{StaticResource PrimaryButton}"
+                                Margin="3,0,3,0"
+                                Padding="10,8"
+                                Command="{Binding DataContext.LaunchProfileCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}"
+                                IsEnabled="{Binding CanEdit}"/>
+                        <Button Content="Dừng"
+                                Margin="6,0,0,0"
+                                Padding="10,8"
+                                Command="{Binding DataContext.StopProfileCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}"/>
+                    </UniformGrid>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </Window.Resources>
+
+    <!-- ROOT SHELL: Flush Sidebar (Left) + Main Content & Footer Status Bar (Right) -->
+    <Grid Margin="0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="212"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TabControl x:Name="NavigationTabs"
+                    Grid.Row="0"
+                    Grid.RowSpan="2"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="2"
+                    SelectedIndex="{Binding SelectedPageIndex, Mode=TwoWay}"
+                    TabStripPlacement="Left"
+                    BorderThickness="0"
+                    Padding="0"
+                    Background="Transparent"
+                    Foreground="{DynamicResource TextBrush}">
+            <TabControl.Template>
+                <ControlTemplate TargetType="TabControl">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="212"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- COLUMN 0: FLUSH SIDEBAR (Starts right below titlebar, full height, no floating card margin/radius) -->
+                        <Border Grid.Column="0"
+                                Background="{DynamicResource SidebarBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="0,0,1,0"
+                                CornerRadius="0"
+                                Margin="0">
+                            <DockPanel LastChildFill="True">
+                                <!-- Brand Header -->
+                                <Border DockPanel.Dock="Top"
+                                        BorderBrush="{DynamicResource SubtleBorderBrush}"
+                                        BorderThickness="0,0,0,1"
+                                        Padding="16,18,12,16"
+                                        Margin="0,0,0,8">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Image Source="pack://application:,,,/NetworkProfileManager;component/Assets/logo.png"
+                                                   Width="34"
+                                                   Height="34"
+                                                   Margin="0,0,10,0"
+                                                   VerticalAlignment="Center"
+                                                   RenderOptions.BitmapScalingMode="HighQuality"/>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="Accre Rotate IP"
+                                                           FontSize="15.5"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource TextBrush}"
+                                                           TextWrapping="NoWrap"/>
+                                                <TextBlock Text="Quản lý Proxy &amp; Profile"
+                                                           FontSize="11"
+                                                           Foreground="{DynamicResource MutedBrush}"
+                                                           TextWrapping="NoWrap"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Sidebar Footer: Theme Switch -->
+                                <Border DockPanel.Dock="Bottom"
+                                        BorderBrush="{DynamicResource SubtleBorderBrush}"
+                                        BorderThickness="0,1,0,0"
+                                        Padding="18,14">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="Giao diện sáng"
+                                                       FontSize="12.5"
+                                                       FontWeight="Medium"
+                                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                            <TextBlock Text="Chuyển đổi Sáng / Tối"
+                                                       FontSize="11"
+                                                       Foreground="{DynamicResource MutedBrush}"/>
+                                        </StackPanel>
+                                        <ToggleButton Grid.Column="1"
+                                                      IsChecked="{Binding LightTheme, Mode=TwoWay}"
+                                                      Style="{StaticResource ThemeSwitch}"
+                                                      VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Navigation Items Host -->
+                                <TabPanel IsItemsHost="True" VerticalAlignment="Top" Margin="0,4,0,0"/>
+                            </DockPanel>
+                        </Border>
+
+                        <!-- COLUMN 1: MAIN CONTENT AREA (Header + Scrollable Page Host + Reserved Footer Slot) -->
+                        <Grid Grid.Column="1">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="37"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- ROW 0: CONTEXTUAL PAGE HEADER -->
+                            <Border Grid.Row="0"
+                                    Background="{DynamicResource HeaderBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}"
+                                    BorderThickness="0,0,0,1"
+                                    Padding="24,16,24,14">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding PageTitle}" Style="{StaticResource Heading}"/>
+                                        <TextBlock Text="{Binding PageSubtitle}"
+                                                   FontSize="13"
+                                                   Foreground="{DynamicResource MutedBrush}"
+                                                   Margin="0,4,0,0"
+                                                   TextWrapping="NoWrap"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+
+                                    <!-- CONTEXTUAL HEADER ACTIONS (Changes dynamically per page) -->
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <!-- Overview & Dual Browsers Actions -->
+                                        <StackPanel Orientation="Horizontal"
+                                                    Visibility="{Binding IsBrowserActionHeaderVisible, Converter={StaticResource BoolVisibility}}">
+                                            <Button Content="Khởi chạy cả hai"
+                                                    Style="{StaticResource PrimaryButton}"
+                                                    Command="{Binding StartBothCommand}"
+                                                    IsEnabled="{Binding IsIdle}"/>
+                                            <Button Content="Dừng cả hai"
+                                                    Command="{Binding StopBothCommand}"
+                                                    ToolTip="{StaticResource HelpStop}"
+                                                    Margin="0,4,0,4"/>
+                                        </StackPanel>
+
+                                        <!-- Proxy Configuration Actions -->
+                                        <StackPanel Orientation="Horizontal"
+                                                    Visibility="{Binding IsProxyPage, Converter={StaticResource BoolVisibility}}">
+                                            <Button Content="Kiểm tra kết nối"
+                                                    Command="{Binding TestGatewayCommand}"
+                                                    IsEnabled="{Binding IsIdle}"/>
+                                            <Button Content="Lưu cấu hình"
+                                                    Style="{StaticResource PrimaryButton}"
+                                                    Command="{Binding SaveProxyCommand}"
+                                                    IsEnabled="{Binding CanConfigure}"
+                                                    Margin="0,4,0,4"/>
+                                        </StackPanel>
+
+                                        <!-- IP Checker Actions -->
+                                        <StackPanel Orientation="Horizontal"
+                                                    Visibility="{Binding IsIpCheckPage, Converter={StaticResource BoolVisibility}}">
+                                            <Button Content="Kiểm tra Gateway"
+                                                    Style="{StaticResource PrimaryButton}"
+                                                    Command="{Binding TestGatewayCommand}"
+                                                    IsEnabled="{Binding IsIdle}"/>
+                                            <Button Content="IP trực tiếp"
+                                                    Command="{Binding CheckDirectCommand}"
+                                                    IsEnabled="{Binding IsIdle}"/>
+                                            <Button Content="Xuất CSV"
+                                                    Command="{Binding ExportResultsCommand}"
+                                                    IsEnabled="{Binding HasFilteredResults}"
+                                                    Margin="0,4,0,4"/>
+                                        </StackPanel>
+
+                                        <!-- Network Info Actions -->
+                                        <StackPanel Orientation="Horizontal"
+                                                    Visibility="{Binding IsNetworkPage, Converter={StaticResource BoolVisibility}}">
+                                            <Button Content="Kiểm tra IP công khai"
+                                                    Style="{StaticResource PrimaryButton}"
+                                                    Command="{Binding CheckDirectCommand}"
+                                                    IsEnabled="{Binding IsIdle}"/>
+                                            <Button Content="Làm mới thông tin"
+                                                    Command="{Binding RefreshNetworkCommand}"
+                                                    IsEnabled="{Binding IsIdle}"
+                                                    Margin="0,4,0,4"/>
+                                        </StackPanel>
+
+                                        <!-- Logs Actions -->
+                                        <StackPanel Orientation="Horizontal"
+                                                    Visibility="{Binding IsLogsPage, Converter={StaticResource BoolVisibility}}">
+                                            <Button Content="Tải lại nhật ký"
+                                                    Style="{StaticResource PrimaryButton}"
+                                                    Command="{Binding RefreshLogsCommand}"
+                                                    IsEnabled="{Binding IsIdle}"/>
+                                            <Button Content="Xuất nhật ký CSV"
+                                                    Command="{Binding ExportLogsCommand}"
+                                                    IsEnabled="{Binding HasFilteredLogs}"
+                                                    Margin="0,4,0,4"/>
+                                        </StackPanel>
+
+                                        <!-- Settings Actions -->
+                                        <StackPanel Orientation="Horizontal"
+                                                    Visibility="{Binding IsSettingsPage, Converter={StaticResource BoolVisibility}}">
+                                            <Button Content="Khôi phục mặc định"
+                                                    Command="{Binding ResetDefaultSettingsCommand}"
+                                                    IsEnabled="{Binding IsIdle}"/>
+                                            <Button Content="Lưu cài đặt"
+                                                    Style="{StaticResource PrimaryButton}"
+                                                    Command="{Binding SaveSettingsCommand}"
+                                                    IsEnabled="{Binding CanConfigure}"
+                                                    Margin="0,4,0,4"/>
+                                        </StackPanel>
+
+                                        <!-- Cancel Button: ONLY shown when an operation is actively running (IsBusy == true) -->
+                                        <Button Content="Hủy tác vụ"
+                                                Style="{StaticResource DangerButton}"
+                                                Command="{Binding CancelCommand}"
+                                                Visibility="{Binding IsBusy, Converter={StaticResource BoolVisibility}}"
+                                                Margin="8,4,0,4"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- ROW 1: PAGE CONTENT HOST -->
+                            <ContentPresenter x:Name="PART_SelectedContentHost"
+                                              Grid.Row="1"
+                                              ContentSource="SelectedContent"
+                                              IsEnabled="{Binding IsIdle}"
+                                              Margin="0"/>
+                        </Grid>
+                    </Grid>
+                </ControlTemplate>
+            </TabControl.Template>
+
+            <!-- ========================================================================= -->
+            <!-- TAB 1: TỔNG QUAN (DASHBOARD — Summary Only, No Duplicate Full Config Form) -->
+            <!-- ========================================================================= -->
+            <TabItem Header="Tổng quan">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,20,24,20">
+                    <StackPanel>
+                        <!-- Gateway Status Summary Banner Card -->
+                        <Border Style="{StaticResource Card}" Padding="20,16" Margin="0,0,0,16">
+                            <StackPanel>
+                                <!-- Top Row: Title, Shared Gateway Chip & Quick Actions -->
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <WrapPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,2,12,2">
+                                            <TextBlock Text="Trạng thái Proxy Gateway" Style="{StaticResource SectionTitle}" VerticalAlignment="Center"/>
+                                            <Button Style="{StaticResource HelpButton}"
+                                                    ToolTip="{StaticResource HelpProxyConfiguration}"
+                                                    AutomationProperties.Name="Thông tin cấu hình proxy"/>
+                                        </StackPanel>
+                                        <Border Background="{DynamicResource InputBrush}"
+                                                BorderBrush="{DynamicResource BorderBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="12"
+                                                Padding="10,3"
+                                                Margin="0,2,0,2"
+                                                VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="1 gateway • 2 profile độc lập"
+                                                           FontSize="12"
+                                                           FontWeight="Medium"
+                                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                                           VerticalAlignment="Center"/>
+                                                <Button Style="{StaticResource HelpButton}"
+                                                        ToolTip="{StaticResource HelpGateway}"
+                                                        AutomationProperties.Name="Thông tin gateway và profile"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </WrapPanel>
+
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Content="Kiểm tra Gateway"
+                                                Command="{Binding TestGatewayCommand}"
+                                                Margin="0,0,8,0"/>
+                                        <Button Content="Thiết lập Proxy…"
+                                                Style="{StaticResource SubtleButton}"
+                                                MinHeight="38"
+                                                Padding="12,8"
+                                                Margin="0"
+                                                Command="{Binding OpenProxySettingsCommand}"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- Bottom Row: 3 Balanced Gateway Metrics -->
+                                <Border Style="{StaticResource SubtleCard}" Padding="16,10">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1.2*"/>
+                                            <ColumnDefinition Width="1.2*"/>
+                                            <ColumnDefinition Width="1*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Margin="0,0,16,0">
+                                            <TextBlock Text="Máy chủ Proxy dùng chung" Style="{StaticResource FieldLabel}"/>
+                                            <TextBlock Text="{Binding GatewayEndpointSummary}"
+                                                       FontSize="14.5"
+                                                       FontWeight="SemiBold"
+                                                       Margin="0,4,0,0"
+                                                       TextWrapping="NoWrap"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding GatewayEndpointSummary}"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Margin="0,0,16,0">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="Tình trạng kết nối" Style="{StaticResource FieldLabel}"/>
+                                                <Button Style="{StaticResource HelpButton}"
+                                                        ToolTip="{Binding ProxyStatus}"
+                                                        AutomationProperties.Name="Chi tiết kết nối gateway"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding ProxyStatus}"
+                                                       FontSize="13.5"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource AccentTextBrush}"
+                                                       Margin="0,4,0,0"
+                                                       TextWrapping="NoWrap"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding ProxyStatus}"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="2">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="Chế độ xoay &amp; Thời hạn" Style="{StaticResource FieldLabel}"/>
+                                                <Button Style="{StaticResource HelpButton}"
+                                                        ToolTip="{StaticResource HelpRotation}"
+                                                        AutomationProperties.Name="Thông tin chế độ xoay IP"/>
+                                            </StackPanel>
+                                            <TextBlock FontSize="13.5"
+                                                       FontWeight="Medium"
+                                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                                       Margin="0,4,0,0"
+                                                       TextWrapping="NoWrap"
+                                                       TextTrimming="CharacterEllipsis">
+                                                <Run Text="{Binding GatewayRotationSummary, Mode=OneWay}"/>
+                                                <Run Text=" • Hạn: "/>
+                                                <Run Text="{Binding GatewayExpirationSummary, Mode=OneWay}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Two Browser Summary Cards (Responsive 2-column -> 1-column when narrow) -->
+                        <views:ResponsiveColumnsPanel Breakpoint="760" ColumnGap="16" RowGap="16" FirstColumnRatio="0.5" EqualRowHeight="True">
+                            <ContentControl Content="{Binding Cards[0]}" ContentTemplate="{StaticResource DashboardSummaryCard}"/>
+                            <ContentControl Content="{Binding Cards[1]}" ContentTemplate="{StaticResource DashboardSummaryCard}"/>
+                        </views:ResponsiveColumnsPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ========================================================================= -->
+            <!-- TAB 2: CẤU HÌNH PROXY (Responsive 2-Column Layout, Grouped Fields)         -->
+            <!-- ========================================================================= -->
+            <TabItem Header="Cấu hình proxy">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,20,24,20">
+                    <views:ResponsiveColumnsPanel Breakpoint="780" ColumnGap="20" RowGap="16" FirstColumnRatio="0.58" EqualRowHeight="False">
+                        <!-- Left Card: Grouped Proxy Form -->
+                        <Border Style="{StaticResource Card}" Margin="0" IsEnabled="{Binding CanConfigure}">
+                            <StackPanel>
+                                <!-- Group 1: Connection -->
+                                <DockPanel Margin="0,0,0,12">
+                                    <TextBlock Text="1. Máy chủ kết nối" Style="{StaticResource SectionTitle}" VerticalAlignment="Center"/>
+                                    <Button Style="{StaticResource HelpButton}"
+                                            ToolTip="{StaticResource HelpProxyConfiguration}"
+                                            HorizontalAlignment="Left"
+                                            AutomationProperties.Name="Thông tin cấu hình proxy"/>
+                                </DockPanel>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="115"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Margin="0,0,12,0">
+                                        <TextBlock Text="Giao thức" Style="{StaticResource FieldLabel}"/>
+                                        <ComboBox ItemsSource="{Binding Protocols}" SelectedIndex="{Binding ProtocolIndex}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                                        <TextBlock Text="Máy chủ (Host / IP)" Style="{StaticResource FieldLabel}"/>
+                                        <TextBox Text="{Binding Host, UpdateSourceTrigger=PropertyChanged}" Tag="vd: proxy.example.com"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Cổng (Port)" Style="{StaticResource FieldLabel}"/>
+                                        <TextBox Text="{Binding Port, UpdateSourceTrigger=PropertyChanged}" Tag="8080"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <Border Height="1" Background="{DynamicResource SubtleBorderBrush}" Margin="0,4,0,14"/>
+
+                                <!-- Group 2: Authentication -->
+                                <TextBlock Text="2. Thông tin xác thực" Style="{StaticResource SectionTitle}" Margin="0,0,0,12"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Margin="0,0,12,0">
+                                        <TextBlock Text="Tên đăng nhập (Username)" Style="{StaticResource FieldLabel}"/>
+                                        <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" Tag="Không bắt buộc nếu proxy mở"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="Mật khẩu (Password)" Style="{StaticResource FieldLabel}"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <!-- Single PasswordBox in Visual Tree; Plain TextBox overlaid only when IsPasswordVisible == true -->
+                                            <PasswordBox views:PasswordBinding.Password="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                         AutomationProperties.Name="Mật khẩu proxy"/>
+                                            <TextBox Text="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                     Visibility="{Binding IsPasswordVisible, Converter={StaticResource BoolVisibility}}"
+                                                     Tag="Nhập mật khẩu"
+                                                     AutomationProperties.Name="Mật khẩu hiển thị"/>
+                                            <Button Grid.Column="1"
+                                                    Content="{Binding PasswordToggleLabel}"
+                                                    Margin="6,4,0,12"
+                                                    Padding="12,8"
+                                                    Command="{Binding TogglePasswordVisibilityCommand}"
+                                                    AutomationProperties.Name="Hiện hoặc ẩn mật khẩu"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Grid>
+
+                                <Border Height="1" Background="{DynamicResource SubtleBorderBrush}" Margin="0,4,0,14"/>
+
+                                <!-- Group 3: Lifecycle & Rotation -->
+                                <TextBlock Text="3. Vòng đời &amp; Chế độ xoay IP" Style="{StaticResource SectionTitle}" Margin="0,0,0,12"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Margin="0,0,12,0">
+                                        <DockPanel>
+                                            <TextBlock Text="Ngày hết hạn" Style="{StaticResource FieldLabel}"/>
+                                            <Button Style="{StaticResource HelpButton}"
+                                                    ToolTip="{StaticResource HelpExpiry}"
+                                                    HorizontalAlignment="Left"
+                                                    AutomationProperties.Name="Thông tin ngày hết hạn"/>
+                                        </DockPanel>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <DatePicker SelectedDate="{Binding ExpirationDate}" AutomationProperties.Name="Ngày hết hạn"/>
+                                            <Button Grid.Column="1"
+                                                    Content="Xóa"
+                                                    Margin="6,4,0,12"
+                                                    Padding="10,8"
+                                                    Command="{Binding ClearExpirationDateCommand}"
+                                                    Visibility="{Binding HasExpirationDate, Converter={StaticResource BoolVisibility}}"/>
+                                        </Grid>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1">
+                                        <DockPanel>
+                                            <TextBlock Text="Chế độ xoay IP" Style="{StaticResource FieldLabel}"/>
+                                            <Button Style="{StaticResource HelpButton}"
+                                                    ToolTip="{StaticResource HelpRotation}"
+                                                    HorizontalAlignment="Left"
+                                                    AutomationProperties.Name="Thông tin rotation và sticky session"/>
+                                        </DockPanel>
+                                        <ComboBox ItemsSource="{Binding RotationModes}" SelectedIndex="{Binding RotationIndex}"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- Group 4: Actions -->
+                                <WrapPanel Margin="0,8,0,0">
+                                    <Button Content="Lưu cấu hình"
+                                            Style="{StaticResource PrimaryButton}"
+                                            Command="{Binding SaveProxyCommand}"/>
+                                    <Button Content="Kiểm tra gateway"
+                                            Command="{Binding TestGatewayCommand}"/>
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Right Card: Gateway Status & Security Info -->
+                        <StackPanel>
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,16">
+                                <StackPanel>
+                                    <DockPanel Margin="0,0,0,14">
+                                        <TextBlock Text="Trạng thái Gateway" Style="{StaticResource SectionTitle}" VerticalAlignment="Center"/>
+                                        <Button Style="{StaticResource HelpButton}"
+                                                ToolTip="{Binding ProxyStatus}"
+                                                HorizontalAlignment="Left"
+                                                AutomationProperties.Name="Chi tiết kết nối gateway"/>
+                                    </DockPanel>
+
+                                    <Border Style="{StaticResource SubtleCard}" Margin="0,0,0,14">
+                                        <StackPanel>
+                                            <TextBlock Text="Tình trạng hiện tại" FontSize="12" Foreground="{DynamicResource MutedBrush}"/>
+                                            <TextBlock Text="{Binding ProxyStatus}"
+                                                       FontSize="14"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource AccentTextBrush}"
+                                                       Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="130"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="30"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Text="Máy chủ đang chọn" Style="{StaticResource FieldLabel}"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding GatewayEndpointSummary}" VerticalAlignment="Center" FontWeight="Medium" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+
+                                        <TextBlock Grid.Row="1" Text="Chế độ xoay IP" Style="{StaticResource FieldLabel}"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding GatewayRotationSummary}" VerticalAlignment="Center"/>
+
+                                        <TextBlock Grid.Row="2" Text="Thời hạn" Style="{StaticResource FieldLabel}"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding GatewayExpirationSummary}" VerticalAlignment="Center"/>
+
+                                        <TextBlock Grid.Row="3" Text="Bảo vệ lưu trữ" Style="{StaticResource FieldLabel}"/>
+                                        <TextBlock Grid.Row="3" Grid.Column="1" Text="Windows DPAPI (CurrentUser)" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Warning Card when Browsers are Running -->
+                            <Border Style="{StaticResource Card}"
+                                    Margin="0"
+                                    Background="{DynamicResource WarningBgBrush}"
+                                    BorderBrush="{DynamicResource WarningBrush}"
+                                    Visibility="{Binding IsGatewayLocked, Converter={StaticResource BoolVisibility}}">
+                                <StackPanel>
+                                    <TextBlock Text="Đang khóa chỉnh sửa Gateway"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource WarningBrush}"/>
+                                    <TextBlock Text="Một hoặc cả hai trình duyệt đang chạy. Hãy dừng trình duyệt trước khi thay đổi thông tin máy chủ proxy dùng chung."
+                                               FontSize="12.5"
+                                               Foreground="{DynamicResource TextBrush}"
+                                               Margin="0,6,0,10"/>
+                                    <Button Content="Dừng cả hai trình duyệt"
+                                            Command="{Binding StopBothCommand}"
+                                            HorizontalAlignment="Left"
+                                            Margin="0"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </views:ResponsiveColumnsPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ========================================================================= -->
+            <!-- TAB 3: HAI TRÌNH DUYỆT (Detailed Browser A/B Configuration)                -->
+            <!-- ========================================================================= -->
+            <TabItem Header="Hai trình duyệt">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,20,24,20">
+                    <StackPanel>
+                        <views:ResponsiveColumnsPanel Breakpoint="760" ColumnGap="16" RowGap="16" FirstColumnRatio="0.5" EqualRowHeight="True">
+                            <ContentControl Content="{Binding Cards[0]}" ContentTemplate="{StaticResource BrowserConfigCard}"/>
+                            <ContentControl Content="{Binding Cards[1]}" ContentTemplate="{StaticResource BrowserConfigCard}"/>
+                        </views:ResponsiveColumnsPanel>
+
+                        <Border Style="{StaticResource Card}" Margin="0,16,0,0" Padding="18,14">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Cô lập dữ liệu trình duyệt" Style="{StaticResource CardTitle}"/>
+                                        <Button Style="{StaticResource HelpButton}"
+                                                ToolTip="{StaticResource HelpGateway}"
+                                                AutomationProperties.Name="Thông tin cô lập trình duyệt"/>
+                                    </StackPanel>
+                                    <TextBlock Text="Mỗi profile có thư mục dữ liệu, tiến trình (Windows Job Object) và cổng proxy cục bộ hoàn toàn tách biệt."
+                                               FontSize="12.5"
+                                               Foreground="{DynamicResource MutedBrush}"
+                                               Margin="0,3,0,0"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Content="Mở thư mục profile"
+                                            Command="{Binding OpenProfilesCommand}"/>
+                                    <Button Content="Lưu lựa chọn"
+                                            Style="{StaticResource PrimaryButton}"
+                                            Command="{Binding SaveSettingsCommand}"
+                                            IsEnabled="{Binding CanConfigure}"
+                                            Margin="0,4,0,4"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ========================================================================= -->
+            <!-- TAB 4: KIỂM TRA IP (Toolbar, Filter, Proportional DataGrid & Empty State) -->
+            <!-- ========================================================================= -->
+            <TabItem Header="Kiểm tra IP">
+                <Grid Margin="24,20,24,20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Toolbar & Observation Card -->
+                    <Border Style="{StaticResource Card}" Padding="16,14" Margin="0,0,0,14">
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Quick Check Actions -->
+                                <WrapPanel VerticalAlignment="Center">
+                                    <Button Content="IP trực tiếp" Command="{Binding CheckDirectCommand}"/>
+                                    <Button Content="IP gateway" Command="{Binding TestGatewayCommand}"/>
+                                    <Button Content="Proxy A" Command="{Binding TestProfileCommand}" CommandParameter="{Binding Cards[0]}"/>
+                                    <Button Content="Proxy B" Command="{Binding TestProfileCommand}" CommandParameter="{Binding Cards[1]}"/>
+                                    <ComboBox Width="140"
+                                              ItemsSource="{Binding Cards}"
+                                              DisplayMemberPath="Name"
+                                              SelectedItem="{Binding SelectedCard}"
+                                              Margin="4,4,8,4"/>
+                                    <Button Content="Kiểm tra 3 lần" Command="{Binding CheckThreeCommand}"/>
+                                    <Button Style="{StaticResource HelpButton}"
+                                            ToolTip="{StaticResource HelpIpChecks}"
+                                            VerticalAlignment="Center"
+                                            AutomationProperties.Name="Thông tin các lần kiểm tra IP"/>
+                                </WrapPanel>
+
+                                <!-- Filter & Copy/Export -->
+                                <WrapPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="Lọc tuyến:" Style="{StaticResource FieldLabel}" Margin="0,0,8,0"/>
+                                    <ComboBox Width="135"
+                                              ItemsSource="{Binding ResultFilterOptions}"
+                                              SelectedIndex="{Binding ResultFilterIndex}"
+                                              Margin="0,4,8,4"/>
+                                    <Button Content="Sao chép IP"
+                                            Command="{Binding CopyCommand}"
+                                            CommandParameter="{Binding SelectedResult.Ip}"/>
+                                    <Button Content="Xuất CSV"
+                                            Command="{Binding ExportResultsCommand}"
+                                            Margin="0,4,0,4"/>
+                                </WrapPanel>
+                            </Grid>
+
+                            <Border Height="1" Background="{DynamicResource SubtleBorderBrush}" Margin="0,8,0,10"/>
+
+                            <!-- Rotation & Duplicate Observation Strip -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
+                                    <TextBlock Text="Quan sát xoay IP:" Style="{StaticResource FieldLabel}"/>
+                                    <TextBlock Text="{Binding RotationObservation}"
+                                               FontSize="12.5"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource AccentTextBrush}"
+                                               Margin="6,0,0,0"
+                                               VerticalAlignment="Center"/>
+                                    <Button Style="{StaticResource HelpButton}"
+                                            HorizontalAlignment="Left"
+                                            AutomationProperties.Name="Kết quả so sánh IP">
+                                        <Button.ToolTip>
+                                            <ToolTip>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding RotationObservation}"/>
+                                                    <TextBlock Text="{Binding DuplicateNotice}" Margin="0,8,0,0"/>
+                                                </StackPanel>
+                                            </ToolTip>
+                                        </Button.ToolTip>
+                                    </Button>
+                                </StackPanel>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding DuplicateNotice}"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource MutedBrush}"
+                                           VerticalAlignment="Center"
+                                           TextWrapping="NoWrap"
+                                           TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding ResultsCountSummary}"
+                                           FontSize="12"
+                                           FontWeight="Medium"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- DataGrid + Empty State Overlay (Preserves single DataGrid with 6 proportional columns) -->
+                    <Grid Grid.Row="1">
+                        <DataGrid ItemsSource="{Binding FilteredResults}" SelectedItem="{Binding SelectedResult}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Tuyến" Binding="{Binding Profile}" Width="0.7*"/>
+                                <DataGridTextColumn Header="Địa chỉ IP" Binding="{Binding Ip}" Width="1.2*"/>
+                                <DataGridTextColumn Header="Kết quả" Binding="{Binding Status}" Width="0.9*"/>
+                                <DataGridTextColumn Header="Độ trễ (ms)" Binding="{Binding ElapsedMs}" Width="0.75*"/>
+                                <DataGridTextColumn Header="Thời điểm" Binding="{Binding LocalTime}" Width="1.35*"/>
+                                <DataGridTextColumn Header="Máy chủ / Tuyến kết nối" Binding="{Binding Endpoint}" Width="2.1*"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <!-- Empty State when FilteredResults is empty -->
+                        <Border Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="1,0,1,1"
+                                Margin="0,41,0,0"
+                                Visibility="{Binding IsResultsEmpty, Converter={StaticResource BoolVisibility}}">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="420" Margin="24">
+                                <Border Width="48"
+                                        Height="48"
+                                        CornerRadius="24"
+                                        Background="{DynamicResource InputBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="1"
+                                        HorizontalAlignment="Center"
+                                        Margin="0,0,0,12">
+                                    <Path Data="M 8,1 C 4.1,1 1,4.1 1,8 C 1,11.9 4.1,15 8,15 C 11.9,15 15,11.9 15,8 C 15,4.1 11.9,1 8,1 Z M 2,8 L 14,8 M 8,1 C 9.8,3 10.8,5.4 10.8,8 C 10.8,10.6 9.8,13 8,15 C 6.2,13 5.2,10.6 5.2,8 C 5.2,5.4 6.2,3 8,1 Z"
+                                          Stroke="{DynamicResource AccentTextBrush}"
+                                          StrokeThickness="1.3"
+                                          Width="16"
+                                          Height="16"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="Chưa có kết quả kiểm tra"
+                                           Style="{StaticResource SectionTitle}"
+                                           HorizontalAlignment="Center"/>
+                                <TextBlock Text="Thực hiện kiểm tra IP trực tiếp, qua Gateway hoặc từng trình duyệt để theo dõi địa chỉ IP phản hồi và tốc độ kết nối."
+                                           FontSize="12.5"
+                                           Foreground="{DynamicResource MutedBrush}"
+                                           TextAlignment="Center"
+                                           Margin="0,6,0,16"/>
+                                <WrapPanel HorizontalAlignment="Center">
+                                    <Button Content="Kiểm tra Gateway ngay"
+                                            Style="{StaticResource PrimaryButton}"
+                                            Command="{Binding TestGatewayCommand}"/>
+                                    <Button Content="Kiểm tra IP trực tiếp"
+                                            Command="{Binding CheckDirectCommand}"
+                                            Margin="0,4,0,4"/>
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- Selected Result Detail Footer -->
+                    <Border Grid.Row="2" Style="{StaticResource SubtleCard}" Margin="0,12,0,0" Padding="14,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="Chi tiết lần kiểm tra:" Style="{StaticResource FieldLabel}"/>
+                                <Button Style="{StaticResource HelpButton}"
+                                        ToolTip="{Binding SelectedResult.Error}"
+                                        AutomationProperties.Name="Chi tiết lỗi lần kiểm tra"/>
+                            </StackPanel>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding SelectedResult.Error, TargetNullValue='Không có lỗi kết nối ở dòng đang chọn.'}"
+                                       FontSize="12.5"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       VerticalAlignment="Center"
+                                       Margin="10,0,0,0"
+                                       TextWrapping="NoWrap"
+                                       TextTrimming="CharacterEllipsis"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- ========================================================================= -->
+            <!-- TAB 5: THÔNG TIN MẠNG (Structured Information Groups & Advanced Actions)  -->
+            <!-- ========================================================================= -->
+            <TabItem Header="Thông tin mạng">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,20,24,20">
+                    <StackPanel>
+                        <views:ResponsiveColumnsPanel Breakpoint="760" ColumnGap="16" RowGap="16" FirstColumnRatio="0.5" EqualRowHeight="True">
+                            <!-- Group 1: Wi-Fi & Adapter -->
+                            <Border Style="{StaticResource Card}" Margin="0">
+                                <StackPanel>
+                                    <DockPanel Margin="0,0,0,14">
+                                        <TextBlock Text="Wi-Fi &amp; Bộ điều hợp mạng" Style="{StaticResource SectionTitle}" VerticalAlignment="Center"/>
+                                        <Button Style="{StaticResource HelpButton}"
+                                                ToolTip="{StaticResource HelpNetwork}"
+                                                HorizontalAlignment="Left"
+                                                AutomationProperties.Name="Thông tin kết nối mạng"/>
+                                    </DockPanel>
+
+                                    <Border Style="{StaticResource SubtleCard}" Margin="0,0,0,12">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="Mạng Wi-Fi đang kết nối (SSID)" FontSize="12" Foreground="{DynamicResource MutedBrush}"/>
+                                                <TextBlock Text="{Binding Network.Ssid}" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource AccentTextBrush}" Margin="0,4,0,0"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="156"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Text="Bộ điều hợp (Adapter)" Style="{StaticResource FieldLabel}" Margin="0,6"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Network.Adapter}" Margin="0,6" FontWeight="Medium" ToolTip="{Binding Network.Adapter}"/>
+
+                                        <TextBlock Grid.Row="1" Text="Cấp phát DHCP" Style="{StaticResource FieldLabel}" Margin="0,6"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Network.Dhcp}" Margin="0,6"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Group 2: Local Network -->
+                            <Border Style="{StaticResource Card}" Margin="0">
+                                <StackPanel>
+                                    <TextBlock Text="Mạng nội bộ (Local Network)" Style="{StaticResource SectionTitle}" Margin="0,0,0,14"/>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="168"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="42"/>
+                                            <RowDefinition Height="42"/>
+                                            <RowDefinition Height="36"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Text="Địa chỉ IPv4 nội bộ" Style="{StaticResource FieldLabel}"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Network.Ipv4}" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" ToolTip="{Binding Network.Ipv4}"/>
+                                        <Button Grid.Column="2"
+                                                Content="&#xE8C8;" FontFamily="Segoe MDL2 Assets" Width="36" Padding="8" ToolTip="Sao chép IPv4" AutomationProperties.Name="Sao chép IPv4"
+                                                Style="{StaticResource SubtleButton}"
+                                                Margin="8,0,0,0"
+                                                Command="{Binding CopyCommand}"
+                                                CommandParameter="{Binding Network.Ipv4}"/>
+
+                                        <TextBlock Grid.Row="1" Text="Địa chỉ vật lý (MAC)" Style="{StaticResource FieldLabel}"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Network.Mac}" FontSize="13" FontWeight="Medium" VerticalAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" ToolTip="{Binding Network.Mac}"/>
+                                        <Button Grid.Row="1"
+                                                Grid.Column="2"
+                                                Content="&#xE8C8;" FontFamily="Segoe MDL2 Assets" Width="36" Padding="8" ToolTip="Sao chép MAC" AutomationProperties.Name="Sao chép MAC"
+                                                Style="{StaticResource SubtleButton}"
+                                                Margin="8,0,0,0"
+                                                Command="{Binding CopyCommand}"
+                                                CommandParameter="{Binding Network.Mac}"/>
+
+                                        <TextBlock Grid.Row="2" Text="Cổng mặc định (Gateway)" Style="{StaticResource FieldLabel}"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding Network.Gateway}" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Group 3: Public IP & DNS Details -->
+                            <Border Style="{StaticResource Card}" Margin="0">
+                                <StackPanel>
+                                    <TextBlock Text="Địa chỉ IP công khai &amp; DNS" Style="{StaticResource SectionTitle}" Margin="0,0,0,14"/>
+
+                                    <Border Style="{StaticResource SubtleCard}" Margin="0,0,0,12">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="IP công khai trực tiếp (Không qua proxy)" FontSize="12" Foreground="{DynamicResource MutedBrush}"/>
+                                                <TextBlock Text="{Binding DirectIp}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource AccentTextBrush}" Margin="0,4,0,0"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Button Content="Kiểm tra ngay"
+                                                        Command="{Binding CheckDirectCommand}"
+                                                        Margin="0,0,6,0"/>
+                                                <Button Content="Sao chép"
+                                                        Style="{StaticResource SubtleButton}"
+                                                        MinHeight="38"
+                                                        Margin="0"
+                                                        Command="{Binding CopyCommand}"
+                                                        CommandParameter="{Binding DirectIp}"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
+                                    <TextBlock Text="Máy chủ phân giải tên miền (DNS)" Style="{StaticResource FieldLabel}" Margin="0,0,0,4"/>
+                                    <Border Background="{DynamicResource InputBrush}"
+                                            BorderBrush="{DynamicResource SubtleBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="7"
+                                            Padding="12,8">
+                                        <TextBlock Text="{Binding Network.Dns}"
+                                                   FontSize="12.5"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   TextWrapping="Wrap"
+                                                   MaxHeight="56"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding Network.Dns}"/>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Group 4: Network Actions & Advanced System Tools -->
+                            <Border Style="{StaticResource Card}" Margin="0">
+                                <StackPanel>
+                                    <TextBlock Text="Công cụ mạng &amp; Quản trị nâng cao" Style="{StaticResource SectionTitle}" Margin="0,0,0,12"/>
+
+                                    <TextBlock Text="Cài đặt mạng Windows" Style="{StaticResource FieldLabel}" Margin="0,0,0,6"/>
+                                    <WrapPanel Margin="0,0,0,12">
+                                        <Button Content="Làm mới thông tin" Command="{Binding RefreshNetworkCommand}"/>
+                                        <Button Content="Cài đặt Wi-Fi Windows" Command="{Binding OpenWifiCommand}"/>
+                                        <Button Content="Địa chỉ phần cứng ngẫu nhiên" Command="{Binding OpenRandomAddressCommand}"/>
+                                        <Button Style="{StaticResource HelpButton}"
+                                                ToolTip="{StaticResource HelpRandomAddress}"
+                                                VerticalAlignment="Center"
+                                                AutomationProperties.Name="Thông tin địa chỉ phần cứng ngẫu nhiên"/>
+                                    </WrapPanel>
+
+                                    <Border Height="1" Background="{DynamicResource SubtleBorderBrush}" Margin="0,0,0,12"/>
+
+                                    <DockPanel Margin="0,0,0,6">
+                                        <TextBlock Text="Thao tác nâng cao (Yêu cầu xác nhận)" Style="{StaticResource FieldLabel}"/>
+                                        <Button Style="{StaticResource HelpButton}"
+                                                ToolTip="{StaticResource HelpAdvancedNetwork}"
+                                                HorizontalAlignment="Left"
+                                                AutomationProperties.Name="Thông tin thao tác mạng nâng cao"/>
+                                    </DockPanel>
+                                    <WrapPanel>
+                                        <Button Content="Xóa bộ nhớ đệm DNS (Flush DNS)…" Command="{Binding FlushDnsCommand}"/>
+                                        <Button Content="Xin cấp lại IP (DHCP Renew)…" Command="{Binding RenewDhcpCommand}"/>
+                                    </WrapPanel>
+                                </StackPanel>
+                            </Border>
+                        </views:ResponsiveColumnsPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ========================================================================= -->
+            <!-- TAB 6: NHẬT KÝ (Filter, Search, Reload, DataGrid & Empty State)           -->
+            <!-- ========================================================================= -->
+            <TabItem Header="Nhật ký">
+                <Grid Margin="24,20,24,20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Filter & Search Toolbar Card -->
+                    <Border Style="{StaticResource Card}" Padding="16,12" Margin="0,0,0,14">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <WrapPanel VerticalAlignment="Center">
+                                <TextBlock Text="Mức độ:" Style="{StaticResource FieldLabel}" Margin="0,0,8,0"/>
+                                <ComboBox Width="165"
+                                          ItemsSource="{Binding LogLevelOptions}"
+                                          SelectedIndex="{Binding LogLevelFilterIndex}"
+                                          Margin="0,4,12,4"/>
+                                <TextBox Width="250"
+                                         Text="{Binding LogSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                         Tag="Tìm kiếm nội dung nhật ký…"
+                                         Margin="0,4,8,4"/>
+                                <Button Content="Xóa lọc"
+                                        Command="{Binding ClearLogFilterCommand}"/>
+                                <Button Content="Tải lại"
+                                        Command="{Binding RefreshLogsCommand}"/>
+                                <Button Style="{StaticResource HelpButton}"
+                                        ToolTip="{StaticResource HelpLogs}"
+                                        VerticalAlignment="Center"
+                                        AutomationProperties.Name="Thông tin lưu trữ nhật ký"/>
+                            </WrapPanel>
+
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding LogsCountSummary}"
+                                           FontSize="12.5"
+                                           FontWeight="Medium"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,12,0"/>
+                                <Button Content="Xuất CSV"
+                                        Command="{Binding ExportLogsCommand}"
+                                        IsEnabled="{Binding HasFilteredLogs}"
+                                        Margin="0,4,0,4"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Logs DataGrid + Empty State Overlay -->
+                    <Grid Grid.Row="1">
+                        <DataGrid ItemsSource="{Binding FilteredLogs}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Thời điểm" Binding="{Binding Time, StringFormat=dd/MM/yyyy HH:mm:ss}" Width="180"/>
+                                <DataGridTextColumn Header="Mức độ" Binding="{Binding Level}" Width="110"/>
+                                <DataGridTextColumn Header="Nội dung chi tiết" Binding="{Binding Message}" Width="*"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <Border Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="1,0,1,1"
+                                Margin="0,41,0,0"
+                                Visibility="{Binding IsLogsEmpty, Converter={StaticResource BoolVisibility}}">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="400" Margin="24">
+                                <Border Width="48"
+                                        Height="48"
+                                        CornerRadius="24"
+                                        Background="{DynamicResource InputBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="1"
+                                        HorizontalAlignment="Center"
+                                        Margin="0,0,0,12">
+                                    <Path Data="M 3,2 L 13,2 L 13,14 L 3,14 Z M 5,5 L 11,5 M 5,8 L 11,8 M 5,11 L 9,11"
+                                          Stroke="{DynamicResource AccentTextBrush}"
+                                          StrokeThickness="1.3"
+                                          Width="16"
+                                          Height="16"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="Chưa có nhật ký hiển thị"
+                                           Style="{StaticResource SectionTitle}"
+                                           HorizontalAlignment="Center"/>
+                                <TextBlock Text="Các sự kiện kiểm tra kết nối và cảnh báo lỗi sẽ được ghi nhận tại đây. Thông tin tài khoản proxy luôn được ẩn an toàn."
+                                           FontSize="12.5"
+                                           Foreground="{DynamicResource MutedBrush}"
+                                           TextAlignment="Center"
+                                           Margin="0,6,0,16"/>
+                                <WrapPanel HorizontalAlignment="Center">
+                                    <Button Content="Tải lại nhật ký"
+                                            Style="{StaticResource PrimaryButton}"
+                                            Command="{Binding RefreshLogsCommand}"/>
+                                    <Button Content="Xóa bộ lọc"
+                                            Command="{Binding ClearLogFilterCommand}"
+                                            Margin="0,4,0,4"/>
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <!-- ========================================================================= -->
+            <!-- TAB 7: CÀI ĐẶT (4 Balanced Sections: Appearance, Checking, Data, About)   -->
+            <!-- ========================================================================= -->
+            <TabItem Header="Cài đặt">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,20,24,20">
+                    <views:ResponsiveColumnsPanel Breakpoint="760" ColumnGap="16" RowGap="16" FirstColumnRatio="0.5" EqualRowHeight="True">
+                        <!-- Section 1: Appearance -->
+                        <Border Style="{StaticResource Card}" Margin="0">
+                            <StackPanel>
+                                <TextBlock Text="Giao diện hiển thị (Appearance)" Style="{StaticResource SectionTitle}" Margin="0,0,0,12"/>
+                                <TextBlock Text="Tùy chỉnh tông màu ứng dụng phù hợp với môi trường làm việc trên Windows 11."
+                                           FontSize="12.5"
+                                           Foreground="{DynamicResource MutedBrush}"
+                                           Margin="0,0,0,16"/>
+
+                                <Border Style="{StaticResource SubtleCard}" Padding="16,14">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="Sử dụng Giao diện sáng (Light Mode)" FontWeight="SemiBold"/>
+                                            <TextBlock Text="Tắt để dùng Giao diện tối (Dark Mode) mặc định."
+                                                       FontSize="12"
+                                                       Foreground="{DynamicResource MutedBrush}"
+                                                       Margin="0,3,0,0"/>
+                                        </StackPanel>
+                                        <ToggleButton Grid.Column="1"
+                                                      IsChecked="{Binding LightTheme, Mode=TwoWay}"
+                                                      Style="{StaticResource ThemeSwitch}"
+                                                      VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Section 2: Connection Checking -->
+                        <Border Style="{StaticResource Card}" Margin="0">
+                            <StackPanel>
+                                <TextBlock Text="Kiểm tra kết nối (Connection Checking)" Style="{StaticResource SectionTitle}" Margin="0,0,0,12"/>
+
+                                <DockPanel>
+                                    <TextBlock Text="Dịch vụ phản hồi IP (HTTPS Echo Endpoint)" Style="{StaticResource FieldLabel}"/>
+                                    <Button Style="{StaticResource HelpButton}"
+                                            ToolTip="{StaticResource HelpEcho}"
+                                            HorizontalAlignment="Left"
+                                            AutomationProperties.Name="Thông tin endpoint kiểm tra IP"/>
+                                </DockPanel>
+                                <TextBox Text="{Binding EchoEndpoint, UpdateSourceTrigger=PropertyChanged}" Tag="https://api.ipify.org"/>
+
+                                <StackPanel>
+                                    <StackPanel Width="150" HorizontalAlignment="Left">
+                                        <DockPanel>
+                                            <TextBlock Text="Thời gian chờ (giây)" Style="{StaticResource FieldLabel}"/>
+                                            <Button Style="{StaticResource HelpButton}"
+                                                    ToolTip="{StaticResource HelpTimeout}"
+                                                    HorizontalAlignment="Left"
+                                                    AutomationProperties.Name="Thông tin thời gian chờ"/>
+                                        </DockPanel>
+                                        <TextBox Text="{Binding TimeoutSeconds, UpdateSourceTrigger=PropertyChanged}" Tag="3 - 120"/>
+                                    </StackPanel>
+                                    <WrapPanel HorizontalAlignment="Left" Margin="0,4,0,8">
+                                        <Button Content="Mặc định"
+                                                Command="{Binding ResetDefaultSettingsCommand}"/>
+                                        <Button Content="Lưu cài đặt"
+                                                Style="{StaticResource PrimaryButton}"
+                                                Command="{Binding SaveSettingsCommand}"
+                                                Margin="0,4,0,4"/>
+                                    </WrapPanel>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Section 3: Data & Privacy -->
+                        <Border Style="{StaticResource Card}" Margin="0">
+                            <StackPanel>
+                                <DockPanel Margin="0,0,0,12">
+                                    <TextBlock Text="Dữ liệu &amp; Quyền riêng tư (Data &amp; Privacy)" Style="{StaticResource SectionTitle}" VerticalAlignment="Center"/>
+                                    <Button Style="{StaticResource HelpButton}"
+                                            ToolTip="{StaticResource HelpStorage}"
+                                            HorizontalAlignment="Left"
+                                            AutomationProperties.Name="Thông tin lưu trữ dữ liệu"/>
+                                </DockPanel>
+
+                                <TextBlock Text="Thư mục dữ liệu cục bộ" Style="{StaticResource FieldLabel}"/>
+                                <Border Style="{StaticResource SubtleCard}" Margin="0,4,0,12" Padding="12,8">
+                                    <TextBlock Text="{Binding DataDirectoryPath}"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               TextWrapping="NoWrap"
+                                               TextTrimming="CharacterEllipsis"
+                                               ToolTip="{Binding DataDirectoryPath}"/>
+                                </Border>
+
+                                <TextBlock Text="• Tài khoản proxy được mã hóa bằng Windows DPAPI theo user hiện tại.&#x0a;• Không truyền mật khẩu qua tham số dòng lệnh trình duyệt.&#x0a;• Dữ liệu được giữ nguyên an toàn khi gỡ cài đặt."
+                                           FontSize="12.5"
+                                           LineHeight="20"
+                                           Foreground="{DynamicResource MutedBrush}"
+                                           Margin="0,0,0,12"/>
+
+                                <WrapPanel>
+                                    <Button Content="Mở thư mục dữ liệu" Command="{Binding OpenDataFolderCommand}"/>
+                                    <Button Content="Mở thư mục profile" Command="{Binding OpenProfilesCommand}"/>
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Section 4: About -->
+                        <Border Style="{StaticResource Card}" Margin="0">
+                            <StackPanel>
+                                <TextBlock Text="Thông tin ứng dụng (About)" Style="{StaticResource SectionTitle}" Margin="0,0,0,12"/>
+
+                                <Border Style="{StaticResource SubtleCard}" Margin="0,0,0,12">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Image Source="pack://application:,,,/NetworkProfileManager;component/Assets/logo.png"
+                                               Width="38"
+                                               Height="38"
+                                               Margin="0,0,12,0"
+                                               VerticalAlignment="Center"
+                                               RenderOptions.BitmapScalingMode="HighQuality"/>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="Accre Rotate IP — Dual Browser Edition" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding AppVersionSummary}"
+                                                       FontSize="12"
+                                                       Foreground="{DynamicResource AccentTextBrush}"
+                                                       Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" MinHeight="36"/>
+                                        <RowDefinition Height="Auto" MinHeight="36"/>
+                                        <RowDefinition Height="Auto" MinHeight="36"/>
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Text="Cầu nối cục bộ" Style="{StaticResource FieldLabel}"/>
+                                    <TextBlock Grid.Column="1" Text="HTTP CONNECT &amp; SOCKS5 Loopback Bridge" VerticalAlignment="Center" FontSize="12.5"/>
+
+                                    <TextBlock Grid.Row="1" Text="Quản lý tiến trình" Style="{StaticResource FieldLabel}"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="Windows Job Object (KILL_ON_JOB_CLOSE)" VerticalAlignment="Center" FontSize="12.5"/>
+
+                                    <TextBlock Grid.Row="2" Text="Quyền riêng tư" Style="{StaticResource FieldLabel}"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="Hoạt động 100% cục bộ, không thu thập telemetry" VerticalAlignment="Center" FontSize="12.5"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </views:ResponsiveColumnsPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <!-- ROW 1, COLUMN 1: COMPACT STATUS BAR (In Window root namescope for GlobalStatusText) -->
+        <Border Grid.Row="1"
+                Grid.Column="1"
+                Background="{DynamicResource HeaderBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="2"/>
+                    <RowDefinition Height="34"/>
+                </Grid.RowDefinitions>
+                <ProgressBar Height="2"
+                             IsIndeterminate="True"
+                             Foreground="{DynamicResource AccentBrush}"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             Visibility="{Binding IsBusy, Converter={StaticResource BoolVisibility}}"/>
+                <Grid Grid.Row="1" Margin="24,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Ellipse Width="7" Height="7" Margin="0,0,8,0" VerticalAlignment="Center">
+                        <Ellipse.Style>
+                            <Style TargetType="Ellipse">
+                                <Setter Property="Fill" Value="{DynamicResource AccentTextBrush}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding StatusKind}" Value="LỖI">
+                                        <Setter Property="Fill" Value="{DynamicResource ErrorBrush}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding StatusKind}" Value="CẢNH BÁO">
+                                        <Setter Property="Fill" Value="{DynamicResource WarningBrush}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Ellipse.Style>
+                    </Ellipse>
+                    <TextBlock x:Name="GlobalStatusText"
+                               Grid.Column="1"
+                               Text="{Binding StatusSummary}"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"
+                               TextWrapping="NoWrap"/>
+                    <Button Grid.Column="3"
+                            Style="{StaticResource HelpButton}"
+                            ToolTip="{Binding Status}"
+                            AutomationProperties.Name="Chi tiết tác vụ gần nhất"/>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
